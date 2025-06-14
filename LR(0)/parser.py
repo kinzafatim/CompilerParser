@@ -102,6 +102,7 @@ class LR0Parser:
 
             if not action:
                 print("❌ Rejected: Invalid action.")
+                print(f"Unexpected token: '{token}' at position {index}")
                 return False
 
             if action[0] == 'accept':
