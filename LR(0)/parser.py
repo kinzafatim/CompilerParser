@@ -129,3 +129,4 @@ class LR0Parser:
 
                 stack.append(prod.head)
                 stack.append(self.parse_table[top_state][prod.head])
+                
