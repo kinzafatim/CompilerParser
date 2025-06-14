@@ -1,8 +1,21 @@
 # parser.py
 
-from utils import closure, goto
-from grammar import Production, Item
 from collections import defaultdict, deque
+from grammar import Production, Item
+from utils import closure, goto
+
+# 🌳 Parse Tree Node
+class ParseNode:
+    def __init__(self, symbol, children=None):
+        self.symbol = symbol
+        self.children = children or []
+
+    def __str__(self, level=0):
+        ret = "  " * level + self.symbol + "\n"
+        for child in self.children:
+            ret += child.__str__(level + 1)
+        return ret
+
 
 class LR0Parser:
     def __init__(self, raw_productions):
@@ -77,6 +90,7 @@ class LR0Parser:
         input_buffer = input_string.split() + ['$']
         stack = [0]
         index = 0
+        tree_stack = []
 
         print("\n--- Parsing Steps ---")
         while True:
@@ -89,17 +103,29 @@ class LR0Parser:
             if not action:
                 print("❌ Rejected: Invalid action.")
                 return False
+
             if action[0] == 'accept':
                 print("✅ Accepted!")
+                print("\n--- Parse Tree ---")
+                print(tree_stack[-1])
                 return True
+
             elif action[0] == 'shift':
                 stack.append(token)
                 stack.append(action[1])
+                tree_stack.append(ParseNode(token))
                 index += 1
+
             elif action[0] == 'reduce':
                 prod = action[1]
-                to_pop = 2 * len(prod.body)
+                n = len(prod.body)
+                to_pop = 2 * n
                 stack = stack[:-to_pop]
-                top = stack[-1]
+                top_state = stack[-1]
+
+                children = tree_stack[-n:] if n > 0 else []
+                tree_stack = tree_stack[:-n]
+                tree_stack.append(ParseNode(prod.head, children))
+
                 stack.append(prod.head)
-                stack.append(self.parse_table[top][prod.head])
+                stack.append(self.parse_table[top_state][prod.head])
